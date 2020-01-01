@@ -1,0 +1,21 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  summary: MyString
+  options: MyString
+  answer: MyString
+  score: 
+  essential: 
+  type: 
+  cate: 
+  exam: 
+
+two:
+  summary: MyString
+  options: MyString
+  answer: MyString
+  score: 
+  essential: 
+  type: 
+  cate: 
+  exam: 

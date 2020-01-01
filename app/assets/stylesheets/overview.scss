@@ -1,0 +1,61 @@
+// Place all the styles related to the overview controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+@import 'main';
+
+.main-frame {
+  width: 600px;
+  height: 600px;
+}
+
+.fullscreeen {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreeen-filter {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: $background-color;
+  opacity: 1; // 0.98
+}
+
+.header {
+  background-color: $header-color;
+}
+
+.aside {
+  background-color: $aside-color;
+}
+
+.vmiddle-wrapper {
+  display: table;
+  width: 100%;
+}
+
+.vmiddle-div {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.vmiddle {
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+.main-div {
+  position: relative;
+  text-align: center;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+}

@@ -1,0 +1,2 @@
+class Customcate < ApplicationRecord
+end

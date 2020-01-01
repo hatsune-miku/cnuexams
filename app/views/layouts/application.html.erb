@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CnuexamsStudent</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+
+  </head>
+
+  <body class="universal-body">
+
+  <% if notice %>
+    <script>
+        setTimeout(() => {
+            document.getElementById('notice-banner').style.visibility = 'hidden';
+        }, 600);
+    </script>
+    <div id="notice-banner" class="notice"><%= notice %></div>
+  <% end %>
+
+  <% if alert %>
+    <div id="alert-banner" class="alert"><%= alert %></div>
+  <% end %>
+
+  <%= yield %>
+  </body>
+</html>
