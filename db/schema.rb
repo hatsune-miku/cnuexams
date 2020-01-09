@@ -10,7 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20191129161930) do
+ActiveRecord::Schema.define(version: 20200109202324) do
+
+  create_table "auths", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "authorizer"
+    t.string "authorizee"
+    t.string "auth_code"
+    t.integer "remaining"
+  end
+
+  create_table "corps", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "name"
+    t.integer "since"
+    t.string "website"
+    t.string "legal_entity"
+    t.string "tel"
+    t.string "fax"
+    t.string "email"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "customcates", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name"
@@ -24,6 +43,18 @@ ActiveRecord::Schema.define(version: 20191129161930) do
     t.text "name", limit: 16777215
     t.float "requirement", limit: 53
     t.integer "retestable"
+    t.integer "time_limit"
+  end
+
+  create_table "hotels", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "name"
+    t.integer "belong"
+    t.string "latlng"
+    t.string "tel"
+    t.integer "cate"
+    t.string "attrs"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "institutes", primary_key: "name", id: :string, limit: 64, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -31,6 +62,15 @@ ActiveRecord::Schema.define(version: 20191129161930) do
     t.float "artp", limit: 53
     t.float "generalp", limit: 53
     t.integer "kind"
+  end
+
+  create_table "members", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "name"
+    t.string "role"
+    t.integer "belong"
+    t.string "tel"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "meta", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -65,6 +105,8 @@ ActiveRecord::Schema.define(version: 20191129161930) do
     t.datetime "updated_at", null: false
     t.integer "exam_id"
     t.float "score", limit: 24
+    t.integer "hit"
+    t.integer "miss"
   end
 
   create_table "test", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -85,8 +127,8 @@ ActiveRecord::Schema.define(version: 20191129161930) do
     t.integer "time_started"
     t.integer "time_submitted"
     t.integer "last_login"
-    t.integer "login_count"
     t.string "saved_answers"
+    t.integer "login_count", default: 0, null: false
   end
 
 end

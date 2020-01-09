@@ -10,12 +10,16 @@
                     <el-table-column prop="value" label="值" width="200px"/>
                 </el-table>
 
-                <p>
-                    <el-button @click.native="nativeOnNo" type="primary" style="width: 200px;" size="medium">好</el-button>
+                <p v-if="onViewAnswer">
+                    <el-button @click.native="nativeOnOk" type="plain" style="width: 100px;" size="medium">好</el-button>
+                    <el-button @click.native="nativeOnViewAnswer" type="primary" style="width: 100px;" size="medium">查看解析</el-button>
+                </p>
+                <p v-if="!onViewAnswer">
+                    <el-button @click.native="nativeOnOk" type="primary" style="width: 200px;" size="medium">好</el-button>
                 </p>
             </div>
         </div>
-        <div class="alertback" style="z-index: 3;" v-if="visibility">
+        <div class="alertback" @click="onAlertBackClicked" style="z-index: 3;" v-if="visibility">
         </div>
     </div>
 </template>
@@ -58,18 +62,30 @@
             onYes: {
                 type: Function
             },
-            onNo: {
+            onOk: {
                 type: Function
+            },
+            cancellable: {
+                type: Boolean,
+                default: false
+            },
+            onViewAnswer: {
+                type: Function,
+                default: null
             }
         },
         methods: {
-            nativeOnYes() {
-                if (this.onYes)
-                    this.onYes();
+            nativeOnOk() {
+                if (this.onOk)
+                    this.onOk();
             },
-            nativeOnNo() {
-                if (this.onNo)
-                    this.onNo();
+            onAlertBackClicked() {
+                if (this.cancellable && this.onOk)
+                    this.onOk();
+            },
+            nativeOnViewAnswer() {
+                if (this.onViewAnswer)
+                    this.onViewAnswer();
             }
         }
 

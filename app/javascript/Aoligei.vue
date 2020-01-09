@@ -12,7 +12,12 @@
                     <el-scrollbar style="height: fit-content; max-height: 295px;" :noresize="true">
                         <template v-for="(_, index) in questions">
                             <div class="question-button advanced-el-button"
-                                 :style="index === currentIndex ? 'background: #ec8aaa;' : 'background: white;'"
+                                 :style="
+                                     viewMode ?
+                                     (answerMatches(index) ? 'background: white;' : 'background: red;')
+                                     :
+                                     (index === currentIndex ? 'background: #ec8aaa;' : 'background: white;')
+                                 "
                                  @click="switchQuestion(index)">
                                 {{index + 1}}
                             </div>
@@ -23,7 +28,7 @@
                     <br/>
 
                     <el-container aria-orientation="horizontal">
-                        <el-button type="primary" size="mini" @click="actionSubmit">交卷</el-button>
+                        <el-button type="primary" size="mini" @click="actionSubmit">{{viewMode ? '返回' : '交卷'}}</el-button>
                         <el-button size="mini" @click="actionLastQuestion"><</el-button>
                         <el-button size="mini" @click="actionNextQuestion">></el-button>
 
@@ -44,13 +49,16 @@
                     <selection-item :on-clicked="actionSelectionUpdated"
                                     :question-index="currentIndex"
                                     :on-finished-loading="onFinishedLoading"
-                                    :on-update-no-question-flag="onUpdateNoQuestionFlag"/>
+                                    :on-update-no-question-flag="onUpdateNoQuestionFlag"
+                                    :view-mode="viewMode"
+                                    :correct-judger="correctJudger"/>
                 </el-main>
 
             </el-container>
 
             <alert-box :visibility="visibility" message="确认要交卷了吗？" :on-yes="performSubmit" :on-no="actionCancel"/>
-            <scoreboard :data="scoreboardData" :visibility="shouldShowScoreboard" :on-yes="actionCancel" :on-no="actionCancel"/>
+            <scoreboard :data="scoreboardData" :visibility="shouldShowScoreboard"
+                        :on-ok="actionScoreboardOk" :on-view-answer="onViewAnswer"/>
         </div>
 
         <div v-if="!ongoingExam" class="main-div">
@@ -99,11 +107,22 @@
                 visibility: false,
                 shouldShowScoreboard: false,
                 scoreboardData: [],
-                ongoingExam: true
+                ongoingExam: true,
+                timer: '',
+                realAnswers: [],
+                viewMode: false
             };
         },
         created() {
-
+            this.timer = setInterval(() => {
+                if (this.globals.shouldSubmitNow === true) {
+                    clearInterval(this.timer);
+                    if (this.$router.currentRoute.path === '/overview/aoligei') {
+                        this.globals.shouldSubmitNow = false;
+                        this.performSubmit();
+                    }
+                }
+            }, 500);
         },
         methods: {
             performSubmit() {
@@ -137,16 +156,26 @@
                     }
                 }
 
-                console.log(answers);
-
                 axios.post('/exams/', {
                     intent: 'judge',
                     session_id: this.$cookies.get('session'),
                     username: this.$cookies.get('username'),
                     answers: answers.join('##')
-                })
-                .then(res => {
+
+                }).then(res => {
+                    if (res.data.errorcode !== 0) {
+                        this.$notify({ type: 'error', message: res.data.message });
+                        this.$alert(res.data.message, 'CNU Exams', {
+                            confirmButtonText: '好'
+                        }).finally(() => {
+                            this.$router.push('/overview/userinfo');
+                        });
+                        return;
+                    }
+
                     let result = res.data.response;
+
+                    this.realAnswers = result.ans;
                     this.scoreboardData = [
                         {
                             key: '学号',
@@ -169,12 +198,24 @@
                             value: result.score + ' 分'
                         },
                         {
+                            key: '用时',
+                            value: this.secondTranslate(result.time_elapsed)
+                        },
+                        {
                             key: '是否通过',
                             value: result.passed ? 'Yes' : 'No'
                         }
                     ];
                     this.shouldShowScoreboard = true;
+
+                }).finally(() => {
+                    this.reinitUserData();
                 });
+            },
+            onViewAnswer() {
+                this.viewMode = true;
+                this.shouldShowScoreboard = false;
+                this.visibility = false;
             },
             answerArraySerialized(answers) {
                 let ret = [];
@@ -217,11 +258,17 @@
                 this.$router.push('/overview/exams');
             },
             actionSubmit() {
-                this.visibility = true;
+                if (this.viewMode)
+                    this.$router.push('/overview/userinfo');
+                else
+                    this.visibility = true;
             },
             actionCancel() {
                 this.visibility = false;
+            },
+            actionScoreboardOk() {
                 this.shouldShowScoreboard = false;
+                this.$router.push('/overview/userinfo');
             },
             actionSelectionUpdated(items) {
                 // saved status.
@@ -247,10 +294,36 @@
                 this.questions = questions;
 
                 this.switchQuestion(0);
+
+                if (this.globals.shouldSubmitNow === true) {
+                    this.globals.shouldSubmitNow = false;
+                    this.performSubmit();
+                }
             },
             onUpdateNoQuestionFlag(flag) {
                 this.ongoingExam = flag === true;
+            },
+            answerMatches(index) {
+                let indexes = this.realAnswers[index].replace(/(.)(?=[^$])/g,"$1,").split(",");
+                let arr = [];
+                for (let i of indexes) {
+                    arr.push(this.questions[index].options.split('##')[i]);
+                }
+                return arr.join('-') === (
+                    this.answers[index] instanceof Array
+                    ? this.answers[index].join('-')
+                    : this.answers[index]
+                );
+            },
+            correctJudger(index) {
+                if (this.realAnswers[this.currentIndex].includes(index))
+                    return 'green';
+                else if (this.answers[this.currentIndex]
+                    && this.answers[this.currentIndex].includes(this.questions[this.currentIndex].options.split('##')[index]))
+                    return 'red';
+                return 'transparent';
             }
         }
     };
 </script>
+

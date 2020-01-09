@@ -6,7 +6,9 @@
             <!-- having margin-left = 0 set can fix this stupid bug. -->
             <el-radio v-for="(option, index) in questions[questionIndex].options.split('##')" :label="option"
                       :key="'radio-' + questionIndex + index" class="selection-item"
-                      style="margin-left: 0;"
+                      :style="'margin-left: 0; ' + (viewMode ? (
+                            'background-color: ' + correctJudger(index) + ';'
+                      ) : '')"
                       border @change="onClicked(savedAnswers)">
                 <div class="radio-inner-wrapper">{{option}}</div>
             </el-radio>
@@ -17,7 +19,9 @@
             <!-- having margin-left = 0 set can fix this stupid bug. -->
             <el-checkbox v-for="(option, index) in questions[questionIndex].options.split('##')" :label="option"
                          :key="'check-' + questionIndex + index" class="selection-item"
-                         style="margin-left: 0;"
+                         :style="'margin-left: 0; ' + (viewMode ? (
+                            'background-color: ' + correctJudger(index) + ';'
+                      ) : '')"
                          border @change="onClicked(savedAnswers)">
                 {{option}}
             </el-checkbox>
@@ -84,7 +88,7 @@
                 username: this.$cookies.get('username')
             })
             .then(res => {
-                if (res.data.message === '无题目') {
+                if (res.data.message === '无题目' || !res.data.response) {
                     this.onUpdateNoQuestionFlag(false);
                     return;
                 }
@@ -138,6 +142,15 @@
                 type: Function
             },
             onUpdateNoQuestionFlag: {
+                type: Function
+            },
+            onAnswersRecovered: {
+                type: Function
+            },
+            viewMode: {
+                type: Boolean
+            },
+            correctJudger: {
                 type: Function
             }
         },

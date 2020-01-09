@@ -3,6 +3,51 @@ class ExamsController < ApplicationController
     def index
         create
     end
+    def verified_exam_limit?
+        return true if login_limit < 0
+
+        # check if provided auth_code.
+        if params[:auth_code]
+            auth = Auth.find_by auth_code: params[:auth_code]
+            unless auth
+                error '授权码无效'
+                return false
+            end
+
+            unless auth.authorizee == @current_user.username or auth.authorizee == '*'
+                error '人码不匹配'
+                return false
+            end
+
+            remaining = auth.remaining
+            if remaining == 1
+                auth.destroy
+            elsif remaining > 1
+                auth.remaining = remaining - 1
+                auth.save
+            end
+
+        else
+            # check if last_login < yesterday?
+            if Time.now.day > Time.at(@current_user.last_login).day
+                # last login is on at least yesterday.
+                # reset login count.
+                @current_user.login_count = 0
+            else
+                # last login is on today.
+                if @current_user.login_count >= login_limit
+                    error '考试次数超出限制'
+                    return false
+                end
+            end
+
+            @current_user.last_login = Time.now
+            @current_user.login_count += 1
+            @current_user.save
+        end
+
+        true
+    end
 
     def create
         intent = params[:intent]
@@ -17,7 +62,7 @@ class ExamsController < ApplicationController
             username = params[:username]
             exam_id = params[:exam_id]
 
-            return unless verified_session_id?(username, session_id)
+            return unless verified_session_id?(username, session_id) and verified_exam_limit?
 
             exam = Exam.find_by id: exam_id
 
@@ -120,17 +165,29 @@ class ExamsController < ApplicationController
             i = 0
 
             exam = Exam.find_by id: @current_user.exam_id
+
+            # check if not submitting on time.
+            time_elapsed = Time.now.to_i - @current_user.time_started
+            if time_elapsed - exam.time_limit > 60
+                # clear saved_answers.
+                @current_user.update question_ids: '', exam_id: 0
+
+                error "你错过了考试(#{exam.name})的提交时间"
+                return
+            end
+
             qids = @current_user.question_ids.split ','
+            real_ans = []
 
             qids.each do |qid|
                 question = Question.find_by id: qid
                 given_ans = answers[i]
                 i += 1
 
-                p question.answer.chars.sort
-                p given_ans
+                ans = question.answer
+                real_ans << ans
 
-                if question.answer.chars.sort == given_ans.chars.sort
+                if ans.chars.sort == given_ans.chars.sort
                     hit += 1
                     score += question.score
                 else
@@ -138,10 +195,23 @@ class ExamsController < ApplicationController
                 end
             end
 
+            # make record.
+            Record.create(
+                username: @current_user.username,
+                question_ids: @current_user.question_ids,
+                ans: answers.join('##'),
+                real_ans: real_ans,
+                time_elapsed: time_elapsed,
+                exam_id: exam.id,
+                score: score,
+                hit: hit,
+                miss: miss
+            )
             # clear saved_answers.
-            @current_user.update question_ids: ''
+            @current_user.update question_ids: '', exam_id: 0
 
-            finish_with hit: hit, miss: miss, score: score, passed: score >= exam.requirement
+            finish_with hit: hit, miss: miss, score: score, ans: real_ans,
+                        passed: score >= exam.requirement, time_elapsed: time_elapsed
 
         else
             render html: 'else'

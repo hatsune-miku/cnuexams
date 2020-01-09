@@ -13,13 +13,13 @@
 
                     <!-- middle -->
                     <table style="position: absolute; left: 50%; transform: translate(-50%, 0);">
-                        <tr>
+                        <tr v-if="timeRemaining > 0 && globals.currentUser.exam_id !== 0">
                             <td style="color: #8c939d;">
-                                研究生学术不端测试 {{secondToTime(timeRemaining)}} 剩余
+                                {{globals.currentUser.exam_name}} <b>{{secondToTime(timeRemaining)}}</b> 剩余
                             </td>
 
                             <td>
-                                <el-progress :percentage="Math.floor(100.0 * timeRemaining / timeInitial)"
+                                <el-progress :percentage="Math.floor(100.0 * timeRemaining / (globals.currentUser.time_limit || 1))"
                                              :text-inside="true" :stroke-width="26"
                                              color="gray"
                                              style="width: 80px;"/>
@@ -101,12 +101,10 @@
                 name: '关镇',
                 visibility: false,
                 timer: '',
-                timeInitial: 2 * 60 * 60,
                 timeRemaining: 0
             };
         },
         created() {
-            this.timeRemaining = this.timeInitial;
         },
         mounted() {
             this.username = this.$cookies.get('username');
@@ -121,7 +119,9 @@
         },
         methods: {
             performSubmit() {
-
+                console.log('force submit.');
+                this.globals.shouldSubmitNow = true;
+                this.$router.push('/overview/aoligei');
             },
             secondToTime(sec) {
                 sec = parseInt(sec);
@@ -135,10 +135,14 @@
                 return hr + ':' + mi + ':' + se;
             },
             timeTick() {
-                this.timeRemaining -= 1;
+                if (this.globals.currentUser === {} || this.globals.currentUser.exam_id === 0)
+                    return;
 
-                if (this.timeRemaining <= 0) {
-                    clearInterval(this.timer);
+                let timeElapsed = (new Date().getTime() / 1000) - this.globals.currentUser.time_started;
+                this.timeRemaining = this.globals.currentUser.time_limit - timeElapsed;
+
+                if (this.timeRemaining <= 1) {
+                    this.timeRemaining = 0;
                     this.performSubmit();
                 }
             },

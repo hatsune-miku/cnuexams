@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  authorizer: MyString
+  authorizee: MyString
+  auth_code: MyString
+  remaining: 1
+
+two:
+  authorizer: MyString
+  authorizee: MyString
+  auth_code: MyString
+  remaining: 1

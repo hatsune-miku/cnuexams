@@ -1,15 +1,32 @@
 <template>
     <div>
         <div style="left: 50%; text-align: left;">
-            <h1>考试列表</h1>
-            <el-table :data="examsData" style="border-radius: 5px; width: 80%;"
+            <table style="width: 90%;">
+                <tr>
+                    <td align="left"><h1>{{authCode ? '考试列表 (使用授权码)' : '考试列表'}}</h1></td>
+                    <td align="right"><el-button type="text" size="medium" @click="actionUseAuthCode">
+                        {{authCode ? '清空授权码' : '使用授权码'}}
+                    </el-button></td>
+                </tr>
+            </table>
+
+            <el-table :data="examsData" style="border-radius: 5px; width: 90%;"
                       :header-cell-style="tableTransparentApplier" :row-style="tableTransparentApplier"
-                      :empty-text="emptyText">
+                      :empty-text="emptyText"
+                      v-loading="loading"
+                      element-loading-text="Now Loading..."
+                      element-loading-spinner="el-icon-loading"
+                      element-loading-background="rgba(0, 0, 0, 0.8)">
                 <el-table-column prop="id" label="ID" width="60px"/>
 
                 <el-table-column prop="name" label="考试名称" width="200px"/>
+                <el-table-column prop="time_limit" label="考试时间" width="160px">
+                    <span slot-scope="scope">
+                        {{secondTranslate(scope.row.time_limit)}}
+                    </span>
+                </el-table-column>
 
-                <el-table-column prop="requirement" label="及格线" width="130px">
+                <el-table-column prop="requirement" label="及格线" width="90px">
                     <template slot-scope="scope">
                         {{scope.row.requirement}} 分
                     </template>
@@ -21,12 +38,12 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column>
-                    <template slot-scope="scope">
+                <el-table-column fixed="right" width="120px">
+                    <span slot-scope="scope">
                         <el-button size="mini"
                                    @click="actionSelectExam(scope.row.id, scope.row.name)"
                                    round>参加考试</el-button>
-                    </template>
+                    </span>
                 </el-table-column>
             </el-table>
         </div>
@@ -38,10 +55,9 @@
 <script>
     import axios from 'axios';
     import AlertBox from "./AlertBox";
-    import App from 'App';
 
     export default {
-        components: {AlertBox},
+        components: { AlertBox },
         data: function () {
             return {
                 username: '',
@@ -50,7 +66,9 @@
                 examsData: [],
                 visibility: false,
                 message: '',
-                targetExamId: -1
+                targetExamId: -1,
+                loading: true,
+                authCode: null
             };
         },
         mounted() {
@@ -58,12 +76,13 @@
             axios.post('/exams/', {
                 intent: 'list',
                 username: this.username
-            })
-            .then(res => {
+            }).then(res => {
                 if (res.data.errorcode !== 0) {
                     return;
                 }
                 this.examsData = res.data.response
+            }).finally(() => {
+                this.loading = false;
             });
         },
         methods: {
@@ -82,14 +101,37 @@
                     intent: 'start',
                     session_id: sessionId,
                     exam_id: this.targetExamId,
+                    auth_code: this.authCode,
                     username: this.username
                 })
                 .then(res => {
+                    if (res.data.errorcode !== 0) {
+                        this.$notify({ type: 'error', message: res.data.message });
+                        this.visibility = false;
+                        return;
+                    }
+
+                    this.reinitUserData();
                     this.$router.push('/overview/aoligei');
                 });
             },
             actionCancel() {
                 this.visibility = false;
+            },
+            actionUseAuthCode() {
+                if (this.authCode) {
+                    this.authCode = null;
+                }
+                else {
+                    this.$prompt('输入授权码', 'CNU Exams', {
+                        confirmButtonText: '好',
+                        cancelButtonText: '取消',
+                    }).then(({ value }) => {
+                        this.authCode = value;
+                    }).catch(() => {
+                        this.authCode = null;
+                    });
+                }
             }
         }
     };

@@ -23,6 +23,34 @@ import '../../assets/stylesheets/element-alter.scss'
 // all routes render on this.
 import App from '../App.vue'
 
+Vue.prototype.globals = { version: 1.0 };
+Vue.prototype.globals.currentUser = {};
+Vue.prototype.secondTranslate = function(sec) {
+    sec = parseInt(sec);
+    let h = Math.floor(sec / 3600);
+    let m = Math.floor((sec % 3600) / 60);
+    let s = Math.floor(sec - h * 3600 - m * 60);
+    let ms = m + ' 分 ' + s + ' 秒';
+    if (h === 0)
+        return ms;
+    return h + ' 小时 ' + ms;
+};
+Vue.prototype.reinitUserData = function() {
+    let username = this.$cookies.get('username');
+    axios.post('/users/', {
+        intent: 'info',
+        username: username
+    }).then(res => {
+        if (res.data.errorcode !== 0) {
+            return;
+        }
+
+        // set global var.
+        this.globals.currentUser = res.data.response;
+        console.log(this.globals.currentUser);
+    });
+};
+
 // all windows.
 import OverviewView from '../overview.vue'
 import LoginView from '../login.vue'
@@ -86,4 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
         el: "#app",
         render: h => h(App)
     });
+
+    if (app.secondTranslate(61) === '1 分 1 秒') {
+        console.log('application started.');
+    }
 });
