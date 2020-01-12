@@ -1,7 +1,7 @@
 <template style="width: 100%;">
     <div>
         <div class="popup-div-wrapper" @click="actionCancel" v-if="visibility" style="z-index: 4;">
-            <div :class="'popup-div ' + (mobile ? 'popup-div-mobile' : 'popup-div-pc')" @click.stop="dummyMethod">
+            <form :class="'popup-div ' + (mobile ? 'popup-div-mobile' : 'popup-div-pc')" @click.stop="dummyMethod">
                 <h3>{{title}}</h3>
 
                 <slot/>
@@ -18,7 +18,8 @@
                                   v-model="inputs[index]"
                                   :show-password="property.password"
                                   style="margin-top: 10px;"
-                                  :id="'input' + index">
+                                  :id="'input' + index"/>
+
 
                         <span slot="append" v-if="property.suffix !== undefined">
                             {{property.suffix}}
@@ -94,7 +95,7 @@
                     </tr>
                 </table>
 
-            </div>
+            </form>
         </div>
 
         <div class="alertback" style="z-index: 3;" v-if="visibility"></div>

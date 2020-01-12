@@ -27,7 +27,7 @@
       <el-row>
         <div class="eggtart-div wrap-content" style="width: 300px; background: #FEFEFE;">
           <!-- 8E354A -->
-          <div style="margin-left: 60px; margin-right: 60px; text-align: center;">
+          <form style="margin-left: 60px; margin-right: 60px; text-align: center;">
             <p class="bold">CNU Exams</p>
             <el-row>
               <el-col>
@@ -48,7 +48,7 @@
                           @keyup.native.enter="actionLogin"/>
               </el-col>
             </el-row>
-          </div>
+          </form>
         </div>
       </el-row>
 

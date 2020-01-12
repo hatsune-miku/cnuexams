@@ -11,6 +11,9 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import VueCookies from 'vue-cookies'
 
+// prevent violation.
+import 'default-passive-events'
+
 // elemenb
 import ElementUI from 'element-ui'
 import '../../assets/stylesheets/element-alter.scss'
