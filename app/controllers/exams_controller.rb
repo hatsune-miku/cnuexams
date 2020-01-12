@@ -15,7 +15,7 @@ class ExamsController < ApplicationController
                 return false
             end
 
-            unless auth.authorizee == @current_user.username or auth.authorizee == '*'
+            unless auth.authorizee == current_user.username or auth.authorizee == '*'
                 error '人码不匹配'
                 return false
             end
@@ -30,21 +30,21 @@ class ExamsController < ApplicationController
 
         else
             # check if last_login < yesterday?
-            if Time.now.day > Time.at(@current_user.last_login).day
+            if Time.now.day > Time.at(current_user.last_login).day
                 # last login is on at least yesterday.
                 # reset login count.
-                @current_user.login_count = 0
+                current_user.login_count = 0
             else
                 # last login is on today.
-                if @current_user.login_count >= login_limit
+                if current_user.login_count >= login_limit
                     error '考试次数超出限制'
                     return false
                 end
             end
 
-            @current_user.last_login = Time.now
-            @current_user.login_count += 1
-            @current_user.save
+            current_user.last_login = Time.now
+            current_user.login_count += 1
+            current_user.save
         end
 
         true
@@ -60,20 +60,19 @@ class ExamsController < ApplicationController
         when 'start'
             # exam start!
             session_id = params[:session_id]
-            username = params[:username]
             exam_id = params[:exam_id]
 
-            return unless verified_session_id?(username, session_id) and verified_exam_limit?
+            return unless verified_session_id?(session_id) and verified_exam_limit?
 
             exam = Exam.find_by id: exam_id
 
             # check if irretestable.
-            if exam.irretestable? and @current_user.passed? exam_id
+            if exam.irretestable? and current_user.passed? exam_id
                 error '不可重复参加'
                 return
             end
 
-            institute = Institute.find_by name: @current_user.institute
+            institute = Institute.find_by name: current_user.institute
 
             artp = institute.artp
             mathp = institute.mathp
@@ -89,12 +88,12 @@ class ExamsController < ApplicationController
             fileq  = Question.sample(exam_id, '3', filep)
             videoq  = Question.sample(exam_id, '4', videop)
 
-            @current_user.update exam_id: exam_id
+            current_user.update exam_id: exam_id
 
             questions = mathq + artq + otherq + fileq + videoq
 
             # save session, start timing and remove saved answers.
-            @current_user.update time_started: Time.now,
+            current_user.update time_started: Time.now,
                                  time_submitted: 0,
                                  last_score: 0,
                                  question_ids: questions.pluck(:id).join(','),
@@ -104,23 +103,21 @@ class ExamsController < ApplicationController
 
         when 'save_status'
             session_id = params[:session_id]
-            username = params[:username]
             answers = params[:current_answers]
 
-            return unless verified_session_id?(username, session_id)
+            return unless verified_session_id?(session_id)
 
             p answers
 
-            @current_user.update saved_answers: answers
+            current_user.update saved_answers: answers
             errorcode 0
 
         when 'restart'
             session_id = params[:session_id]
-            username = params[:username]
 
-            return unless verified_session_id?(username, session_id)
+            return unless verified_session_id?(session_id)
 
-            question_ids = @current_user.question_ids.split(',')
+            question_ids = current_user.question_ids.split(',')
 
             if question_ids.length == 0
                 # not attended or no questions.
@@ -146,16 +143,15 @@ class ExamsController < ApplicationController
                 }
             end
 
-            ret[:saved_answers] = @current_user.saved_answers
+            ret[:saved_answers] = current_user.saved_answers
 
             finish_with ret
 
         when 'judge'
             session_id = params[:session_id]
-            username = params[:username]
             answers = params[:answers].split '##'
 
-            unless verified_session_id?(username, session_id)
+            unless verified_session_id?(session_id)
                 redirect_to '/'
                 return
             end
@@ -165,19 +161,19 @@ class ExamsController < ApplicationController
             score = 0
             i = 0
 
-            exam = Exam.find_by id: @current_user.exam_id
+            exam = Exam.find_by id: current_user.exam_id
 
             # check if not submitting on time.
-            time_elapsed = Time.now.to_i - @current_user.time_started
+            time_elapsed = Time.now.to_i - current_user.time_started
             if time_elapsed - exam.time_limit > 60
                 # clear saved_answers.
-                @current_user.update question_ids: '', exam_id: 0
+                current_user.update question_ids: '', exam_id: 0
 
                 error "你错过了考试(#{exam.name})的提交时间"
                 return
             end
 
-            qids = @current_user.question_ids.split ','
+            qids = current_user.question_ids.split ','
             real_ans = []
 
             qids.each do |qid|
@@ -198,8 +194,8 @@ class ExamsController < ApplicationController
 
             # make record.
             Record.create(
-                username: @current_user.username,
-                question_ids: @current_user.question_ids,
+                username: current_user.username,
+                question_ids: current_user.question_ids,
                 ans: answers.join('##'),
                 real_ans: real_ans,
                 time_elapsed: time_elapsed,
@@ -209,7 +205,7 @@ class ExamsController < ApplicationController
                 miss: miss
             )
             # clear saved_answers.
-            @current_user.update question_ids: '', exam_id: 0
+            current_user.update question_ids: '', exam_id: 0
 
             finish_with hit: hit, miss: miss, score: score, ans: real_ans,
                         passed: score >= exam.requirement, time_elapsed: time_elapsed
@@ -220,12 +216,9 @@ class ExamsController < ApplicationController
         end
     end
 
-    def verified_session_id?(username, given_session_id)
-        @current_user = User.find_by username: username
-        real_session_id = @current_user.session_id
-
+    def verified_session_id?(given_session_id)
         # check if session_id is incorrect.
-        unless given_session_id == real_session_id
+        unless given_session_id == current_user.session_id
             error 'session_id 不正确'
             return false
         end

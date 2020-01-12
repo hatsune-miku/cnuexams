@@ -9,6 +9,8 @@
                       :style="'margin-left: 0; ' + (viewMode ? (
                             'background-color: ' + correctJudger(index) + ';'
                       ) : '')"
+
+                      :disabled="viewMode"
                       border @change="onClicked(savedAnswers)">
                 <div class="radio-inner-wrapper">{{option}}</div>
             </el-radio>
@@ -22,6 +24,7 @@
                          :style="'margin-left: 0; ' + (viewMode ? (
                             'background-color: ' + correctJudger(index) + ';'
                       ) : '')"
+                         :disabled="viewMode"
                          border @change="onClicked(savedAnswers)">
                 {{option}}
             </el-checkbox>

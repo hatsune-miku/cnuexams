@@ -3,7 +3,10 @@ require 'uuid'
 class ApplicationController < ActionController::Base
     protect_from_forgery with: :exception
 
-    attr_accessor :current_user
+    def current_user
+        @current_user = User.find_by username: session[:user_id] unless @current_user
+        @current_user
+    end
 
     def login_limit
         @login_limit = Preference.find_by(name: 'login_limit').value.to_i unless @login_limit
@@ -25,9 +28,7 @@ class ApplicationController < ActionController::Base
     end
 
     def parse_error(errors)
-        ret = []
-        errors.each { |_, err| ret << err }
-        ret.join ', '
+        errors.each { |_, err| err }.join ', '
     end
 
     def finish_with(res)
@@ -40,7 +41,7 @@ class ApplicationController < ActionController::Base
     end
 
     def authenticate_user
-        if :current_user == nil
+        if current_user == nil
             redirect_to '/'
         end
     end

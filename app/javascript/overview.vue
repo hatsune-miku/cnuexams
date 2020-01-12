@@ -15,10 +15,10 @@
                     <table style="position: absolute; left: 50%; transform: translate(-50%, 0);">
                         <tr v-if="timeRemaining > 0 && globals.currentUser.exam_id !== 0">
                             <td style="color: #8c939d;">
-                                {{globals.currentUser.exam_name}} <b>{{secondToTime(timeRemaining)}}</b> 剩余
+                                {{globals.currentUser.exam_name}} - <b>{{secondToTime(timeRemaining)}}</b>
                             </td>
 
-                            <td>
+                            <td v-if="false">
                                 <el-progress :percentage="Math.floor(100.0 * timeRemaining / (globals.currentUser.time_limit || 1))"
                                              :text-inside="true" :stroke-width="26"
                                              color="gray"

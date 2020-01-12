@@ -12,43 +12,46 @@ class UsersController < ApplicationController
             username = params[:username]
             password = params[:password]
 
-            @current_user = User.find_by username: username
+            user = User.find_by username: username
 
-            if (current_user == nil) or (@current_user.password != password)
+            if (user == nil) or (user.password != password)
                 error '学号或密码错误'
                 return
             end
 
             session_id = UUID.new.generate
-            @current_user.session_id = session_id
-            @current_user.save
+            user.session_id = session_id
+            user.save
 
-            finish_with session_id: session_id, name: @current_user.name
+            session[:user_id] = user.id
+
+            finish_with session_id: session_id, name: user.name
 
         when 'reset'
             username = params[:username]
             password = params[:password]
             new_password = params[:new_password]
 
-            @current_user = User.find_by username: username
+            user = User.find_by username: username
 
-            if (current_user == nil) or (@current_user.password != password)
+            if (user == nil) or (user.password != password)
                 error '学号或密码错误'
                 return
             end
 
-            if @current_user.update password: new_password
+            if user.update password: new_password
                 errorcode 0
             else
-                error parse_error(@current_user.errors)
+                error parse_error(user.errors)
             end
 
         when 'reuse'
             session_id = params[:sessionId]
+            user = User.find_by session_id: session_id
 
-            @current_user = User.find_by session_id: session_id
+            session[:user_id] = user.id
 
-            if session_id.empty? or @current_user == nil
+            if session_id.empty? or current_user == nil
                 return
             end
             finish_with session_id
@@ -58,13 +61,13 @@ class UsersController < ApplicationController
 
         when 'info'
             username = params[:username]
-            @current_user = User.find_by username: username
+            current_user = User.find_by username: username
 
             pref = Preference.find_by(name: 'login_limit').value.to_i
             pref = '∞' if pref < 0
-            limit_desc = "#{@current_user.login_count} / #{pref}"
+            limit_desc = "#{current_user.login_count} / #{pref}"
 
-            exam_id = @current_user.exam_id
+            exam_id = current_user.exam_id
             exam = Exam.find_by id: exam_id
             exam_name = nil
             exam_time_limit = 2 * 60 * 60
@@ -76,13 +79,13 @@ class UsersController < ApplicationController
                 exam_id = 0
             end
 
-            finish_with name: @current_user.name,
-                        institute: @current_user.institute,
-                        major: @current_user.major,
+            finish_with name: current_user.name,
+                        institute: current_user.institute,
+                        major: current_user.major,
                         limit: limit_desc,
                         exam_id: exam_id,
                         exam_name: exam_name,
-                        time_started: @current_user.time_started,
+                        time_started: current_user.time_started,
                         time_limit: exam_time_limit
 
         when 'history'

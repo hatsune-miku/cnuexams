@@ -12,12 +12,7 @@
                     <el-scrollbar style="height: fit-content; max-height: 295px;" :noresize="true">
                         <template v-for="(_, index) in questions">
                             <div class="question-button advanced-el-button"
-                                 :style="
-                                     viewMode ?
-                                     (answerMatches(index) ? 'background: white;' : 'background: red;')
-                                     :
-                                     (index === currentIndex ? 'background: #ec8aaa;' : 'background: white;')
-                                 "
+                                 :style="cellStyleAdapter(index)"
                                  @click="switchQuestion(index)">
                                 {{index + 1}}
                             </div>
@@ -42,7 +37,7 @@
                 </el-aside>
 
                 <el-main style="width: fit-content;">
-                    <h4 style="color: #8c939d;">2 分，随机题，单选</h4>
+                    <h4 style="color: #8c939d;">{{questionInfo()}}</h4>
                     <el-input class="summary-area" type="textarea" v-model="currentSummary"
                               :autosize="true" :readonly="true" style="width: 90%;"/>
 
@@ -142,7 +137,7 @@
                         else {
                             let subarray = '';
                             for (let a of this.answers[i]) {
-                                console.log(a);
+                                // console.log(a);
 
                                 let index = question.options.split('##').indexOf(a);
                                 if (index === -1)
@@ -243,10 +238,11 @@
                         ret.push(this.questions[i].options.split('##').indexOf(ans));
                     }
                 }
-
                 return ret.join(',');
             },
             performSaveStatus() {
+                // console.log(this.answerArraySerialized(this.answers));
+                // console.log('saved.');
                 axios.post('/exams/', {
                     intent: 'save_status',
                     session_id: this.$cookies.get('session'),
@@ -271,9 +267,14 @@
                 this.$router.push('/overview/userinfo');
             },
             actionSelectionUpdated(items) {
+                if (this.viewMode)
+                    return;
+
                 // saved status.
                 this.answers = items;
-                this.performSaveStatus();
+
+                if (this.questions.length !== 0)
+                    this.performSaveStatus();
             },
             actionNextQuestion() {
                 if (this.currentIndex === this.questions.length - 1)
@@ -322,6 +323,33 @@
                     && this.answers[this.currentIndex].includes(this.questions[this.currentIndex].options.split('##')[index]))
                     return 'red';
                 return 'transparent';
+            },
+            cellStyleAdapter(index) {
+                if (this.viewMode) {
+                    return this.answerMatches(index) ? 'background: white;' : 'background: red;';
+                }
+
+                // is current question?
+                let background = (index === this.currentIndex)
+                    ? '#EC8AAA'
+                    : 'white';
+
+                // is unanswered?
+                let addition = (!this.answers[index] || this.answers[index].length === 0)
+                    ? 'color: black;'
+                    : 'background: #dfdfdf;';
+
+                return `background: ${background}; ${addition}`;
+            },
+            questionInfo() {
+                let question = this.questions[this.currentIndex];
+                if (!question)
+                    return '';
+
+
+                let kind = question.kind === 0 ? '单选' : '多选';
+                let cate = ['理科题', '文科题', '通用-其它题', '通用-文件题', '通用-视频题'][question.cate];
+                return `第 ${this.currentIndex + 1} 题，${question.score} 分，${cate}，${kind}`;
             }
         }
     };
