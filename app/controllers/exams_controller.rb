@@ -3,6 +3,7 @@ class ExamsController < ApplicationController
     def index
         create
     end
+
     def verified_exam_limit?
         return true if login_limit < 0
 

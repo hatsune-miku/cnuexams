@@ -24,6 +24,12 @@ class ApplicationController < ActionController::Base
         }
     end
 
+    def parse_error(errors)
+        ret = []
+        errors.each { |_, err| ret << err }
+        ret.join ', '
+    end
+
     def finish_with(res)
         flash[:notice] = '操作成功'
         render json: {

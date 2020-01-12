@@ -25,6 +25,24 @@ class UsersController < ApplicationController
 
             finish_with session_id: session_id, name: @current_user.name
 
+        when 'reset'
+            username = params[:username]
+            password = params[:password]
+            new_password = params[:new_password]
+
+            @current_user = User.find_by username: username
+
+            if (current_user == nil) or (@current_user.password != password)
+                error '学号或密码错误'
+                return
+            end
+
+            if @current_user.update password: new_password
+                errorcode 0
+            else
+                error parse_error(@current_user.errors)
+            end
+
         when 'reuse'
             session_id = params[:sessionId]
 

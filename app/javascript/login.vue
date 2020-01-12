@@ -53,13 +53,13 @@
       </el-row>
 
       <el-row style="margin-top: 15px;">
-        <el-col :span=12 align="center">
+        <el-col :span="12" align="center">
           <el-button circle
                      type="warning"
                      icon="el-icon-edit"
-                     @click="actionRegister"/>
+                     @click="actionResetPassword"/>
         </el-col>
-        <el-col :span=12 align="center">
+        <el-col :span="12" align="center">
           <el-button circle
                      :loading="loading"
                      :type="type"
@@ -68,20 +68,33 @@
         </el-col>
       </el-row>
     </div>
+
+    <property-editor title="修改密码" :visibility="shouldShowResetPassword" :properties="properties"
+                     :on-cancelled="actionCancel" :on-confirmed="actionConfirm"/>
   </div>
 </template>
 
 <script>
   import axios from 'axios';
   import utils from 'utils';
+  import PropertyEditor from "./PropertyEditor";
 
   export default {
+    components: { PropertyEditor },
     data: function () {
       return {
         username: '',
         password: '',
         type: 'danger',
-        loading: false
+        loading: false,
+        shouldShowResetPassword: false,
+        properties: [
+          { key: 'id', uninputable: true },
+          { key: 'username', label: '学号' },
+          { key: 'password', label: '现密码', password: true },
+          { key: 'new_password', label: '新密码', password: true },
+          { key: 'new_password_verify', label: '确认新密码', password: true }
+        ]
       };
     },
 
@@ -102,12 +115,36 @@
     },
 
     methods: {
-      actionRegister() {
-        window.location.href = '/user/sign_up';
+      actionResetPassword() {
+        this.shouldShowResetPassword = true;
       },
+      actionConfirm(res) {
+        this.shouldShowResetPassword = false;
 
+        if (res.new_password !== res.new_password_verify) {
+          this.$notify({ type: 'error', message: '新密码和确认新密码不一致' });
+          return;
+        }
+
+        axios.post('/users/', {
+          intent: 'reset',
+          username: res.username,
+          password: res.password,
+          new_password: res.new_password
+        }).then(res => {
+          if (res.data.errorcode !== 0) {
+            this.$notify({ type: 'error', message: res.data.message });
+            return;
+          }
+          this.$notify({ type: 'success', message: '密码修改成功' });
+        });
+      },
+      actionCancel() {
+        this.shouldShowResetPassword = false;
+      },
       actionLogin() {
         this.loading = true;
+
 
         axios.post('/users/', {
           intent: 'login',
