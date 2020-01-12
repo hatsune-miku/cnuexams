@@ -2,8 +2,10 @@
   <div>
     <div class="top-right wrap-content eggtart-div" style="color: black; height: fit-content; width: 300px; background: #FEFEFE;">
       <div style="margin-left: 20px;">
-        <p style="size: 12px">CNU Exams<br/>首都师范大学 信息工程学院<br/></p>
-        <p>欢迎问题反馈和建议<br/>email: eggtart@mikutart.com<br/>wechat: a1knla</p>
+        <div style="font-size: 15px;">
+          <p><b>首都师范大学考试系统</b></p>
+          <p style="font-size: 14px;">反馈和建议<br/>🍉wechat: a1knla<br/>🍉️wechat: lxt1025</p>
+        </div>
         <el-button type="danger" plain @click="actionGoSourceCode">
           <table>
             <tr>
@@ -21,7 +23,7 @@
       </div>
     </div>
     <div class="top-left">
-      CNU Exams
+
     </div>
     <div class="right-bottom">
       <el-row>
