@@ -100,7 +100,6 @@
 
     mounted() {
       let sessionId = utils.getReusedSession(this);
-      console.log('saved session: ' + sessionId);
 
       axios.post('/users/', {
         intent: 'reuse',

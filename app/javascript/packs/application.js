@@ -7,7 +7,12 @@
 // To reference this file, add <%= javascript_pack_tag 'application' %> to the appropriate
 // layout file, like app/views/layouts/application.html.erb
 
+console.log('loading application...');
+
 import Vue from 'vue'
+
+Vue.config.productionTip = false;
+
 import VueRouter from 'vue-router'
 import VueCookies from 'vue-cookies'
 
@@ -101,8 +106,8 @@ const router = new VueRouter({
     ]
 });
 
-
 document.addEventListener('DOMContentLoaded', () => {
+
     let token = document.getElementsByName('csrf-token')[0].getAttribute('content');
     console.log('csrf-token: ' + token);
     axios.defaults.headers.common['X-CSRF-Token'] = token;
@@ -119,6 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (app.secondTranslate(61) === '1 分 1 秒') {
-        console.log('application started.');
+        console.log('CNU Exams by EGGTART!');
+        console.log('wechat: a1knla');
+        console.log('wechat: lxt1025');
     }
 });
