@@ -4,7 +4,7 @@ class Question < ApplicationRecord
 
     def self.sample(exam_id, cate, perportion)
         where('exam like ? and cate = ?', "%#{exam_id}%", cate)
-            .group(:label, :id)
+            .group(:label, :cate, :id)
             .order(essential: :desc)
             .limit(MAX_QUESTIONS_COUNT * perportion)
     end
