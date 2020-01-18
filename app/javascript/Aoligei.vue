@@ -15,7 +15,7 @@
                             <span v-if="question.label !== ''">
                                 <span v-if="index !== 0"><br/></span>
                                 <span style="font-size: 14px; font-weight: bold; line-height: 40px; color: gray; position: relative; top: 3px;">
-                                    {{question.label}}
+                                    {{question.label.substring(1)}}
                                 </span>
                                 <span v-if="question.label !== ''"><br/></span>
                             </span>
