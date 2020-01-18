@@ -38,6 +38,14 @@
                     </template>
                 </el-table-column>
 
+                <el-table-column prop="policy" label="若考多次，如何确定成绩？">
+                    <template slot-scope="scope">
+                        {{
+                        ['以最后一次为准', '以最高分为准', '以最低分为准', '取平均'][scope.row.policy]
+                        }}
+                    </template>
+                </el-table-column>
+
                 <el-table-column fixed="right" width="120px">
                     <span slot-scope="scope">
                         <el-button size="mini"
@@ -67,6 +75,7 @@
                 visibility: false,
                 message: '',
                 targetExamId: -1,
+                givenMajor: null,
                 loading: true,
                 authCode: null
             };
@@ -91,6 +100,13 @@
             },
             actionSelectExam(id, name) {
                 this.targetExamId = id;
+                if (name.includes('(理科)'))
+                    this.givenMajor = 0;
+                else if (name.includes('(文科)'))
+                    this.givenMajor = 1;
+                else
+                    this.givenMajor = null;
+
                 this.message = "确认参加「" + name + "」考试吗？";
                 this.visibility = true;
             },
@@ -99,6 +115,7 @@
 
                 axios.post('/exams/', {
                     intent: 'start',
+                    given_major: this.givenMajor,
                     session_id: sessionId,
                     exam_id: this.targetExamId,
                     auth_code: this.authCode,
@@ -106,7 +123,17 @@
                 })
                 .then(res => {
                     if (res.data.errorcode !== 0) {
-                        this.$notify({ type: 'error', message: res.data.message });
+
+                        if (res.data.message.includes('连续不及格')) {
+                            this.$alert(res.data.message, 'CNU Exams', {
+                                confirmButtonText: '好',
+                                dangerouslyUseHTMLString: true
+                            });
+                        }
+                        else {
+                            this.$notify({ type: 'error', message: res.data.message });
+                        }
+
                         this.visibility = false;
                         return;
                     }

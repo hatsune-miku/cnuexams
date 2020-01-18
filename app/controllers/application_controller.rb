@@ -8,11 +8,6 @@ class ApplicationController < ActionController::Base
         @current_user
     end
 
-    def login_limit
-        @login_limit = Preference.find_by(name: 'login_limit').value.to_i unless @login_limit
-        @login_limit
-    end
-
     def error(msg)
         flash[:alert] = msg
         render json: {

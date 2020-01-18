@@ -4,8 +4,23 @@ class ExamsController < ApplicationController
         create
     end
 
-    def verified_exam_limit?
-        return true if login_limit < 0
+    def verified_exam_limit?(exam)
+        limit = exam.limit || 0
+
+        # ensure exam_limit.
+        exam_limit = ExamLimit.find_by username: current_user.username,
+                                       exam_id: exam.id
+
+        unless exam_limit
+            exam_limit = ExamLimit.create(username: current_user.username,
+                                          exam_id: exam.id,
+                                          current: 0,
+                                          locked_before: 0,
+                                          last_login: Time.now
+            )
+        end
+
+        return true if limit < 0
 
         # check if provided auth_code.
         if params[:auth_code]
@@ -29,22 +44,30 @@ class ExamsController < ApplicationController
             end
 
         else
+
+            # check if locked?
+            locked_before = Time.at exam_limit.locked_before
+            if Time.now < locked_before
+                error "连续不及格次数超过 3 次啦！<br/>下次考试将在 #{locked_before} 时准时开放。"
+                return false
+            end
+
             # check if last_login < yesterday?
-            if Time.now.day > Time.at(current_user.last_login).day
+            if Time.now.day > Time.at(exam_limit.last_login).day
                 # last login is on at least yesterday.
                 # reset login count.
-                current_user.login_count = 0
+                exam_limit.current = 0
             else
                 # last login is on today.
-                if current_user.login_count >= login_limit
+                if exam_limit.current >= limit
                     error '考试次数超出限制'
                     return false
                 end
             end
 
-            current_user.last_login = Time.now
-            current_user.login_count += 1
-            current_user.save
+            exam_limit.last_login = Time.now
+            exam_limit.current += 1
+            exam_limit.save
         end
 
         true
@@ -55,16 +78,17 @@ class ExamsController < ApplicationController
         case intent
 
         when 'list'
-            finish_with Exam.all
+            finish_with Exam.where public: true
 
         when 'start'
             # exam start!
             session_id = params[:session_id]
             exam_id = params[:exam_id]
-
-            return unless verified_session_id?(session_id) and verified_exam_limit?
+            given_major = params[:given_major]
 
             exam = Exam.find_by id: exam_id
+
+            return unless verified_session_id?(session_id) and verified_exam_limit?(exam)
 
             # check if irretestable.
             if exam.irretestable? and current_user.passed? exam_id
@@ -72,21 +96,39 @@ class ExamsController < ApplicationController
                 return
             end
 
-            institute = Institute.find_by name: current_user.institute
+            case given_major
+            when nil
+                institute = Institute.find_by name: current_user.institute
+                artp = institute.artp
+                mathp = institute.mathp
+                generalp = institute.generalp
 
-            artp = institute.artp
-            mathp = institute.mathp
+            when 0
+                artp = 0
+                mathp = 0.8
+                generalp = 0.2
 
-            generalp = institute.generalp
+            when 1
+                artp = 0.8
+                mathp = 0
+                generalp = 0.2
+
+            else
+                artp = 0
+                mathp = 0
+                generalp = 0
+
+            end
+
             filep = Customcate.find_by(name: 'file').perportion * generalp
             otherp = Customcate.find_by(name: 'other').perportion * generalp
             videop = Customcate.find_by(name: 'video').perportion * generalp
 
-            mathq = Question.sample(exam_id, '0', mathp)
-            artq = Question.sample(exam_id, '1', artp)
-            otherq  = Question.sample(exam_id, '2', otherp)
-            fileq  = Question.sample(exam_id, '3', filep)
-            videoq  = Question.sample(exam_id, '4', videop)
+            mathq = Question.sample(exam_id, 0, mathp)
+            artq = Question.sample(exam_id, 1, artp)
+            otherq  = Question.sample(exam_id, 2, otherp)
+            fileq  = Question.sample(exam_id, 3, filep)
+            videoq  = Question.sample(exam_id, 4, videop)
 
             current_user.update exam_id: exam_id
 
@@ -95,11 +137,10 @@ class ExamsController < ApplicationController
             # save session, start timing and remove saved answers.
             current_user.update time_started: Time.now,
                                  time_submitted: 0,
-                                 last_score: 0,
                                  question_ids: questions.pluck(:id).join(','),
                                  saved_answers: ''
 
-            finish_with questions.shuffle
+            finish_with questions
 
         when 'save_status'
             session_id = params[:session_id]
@@ -127,11 +168,13 @@ class ExamsController < ApplicationController
 
             ret = {
                 questions: [],
-                saved_answers: nil
+                saved_answers: current_user.saved_answers
             }
 
+            last_label = ''
             question_ids.each do |id|
                 question = Question.find_by id: id
+
                 ret[:questions] << {
                     id: id,
                     summary: question.summary,
@@ -139,11 +182,12 @@ class ExamsController < ApplicationController
                     score: question.score,
                     essential: question.essential,
                     kind: question.kind,
-                    cate: question.cate
+                    cate: question.cate,
+                    label: question.label == last_label ? '' : question.label
                 }
-            end
 
-            ret[:saved_answers] = current_user.saved_answers
+                last_label = question.label
+            end
 
             finish_with ret
 
@@ -192,6 +236,32 @@ class ExamsController < ApplicationController
                 end
             end
 
+            # judge policy.
+            policy = exam.policy
+            should_record = case policy
+                            # override only.
+                            when 0
+                                true
+
+                            # higher.
+                            when 1
+                                Record.exists? 'username = ?, exam_id = ?, score > ?',
+                                               current_user.username,
+                                               exam.id,
+                                               score
+
+                            # lower.
+                            when 2
+                                Record.exists? 'username = ?, exam_id = ?, score < ?',
+                                               current_user.username,
+                                               exam.id,
+                                               score
+
+                            else
+                                true
+
+                            end
+
             # make record.
             Record.create(
                 username: current_user.username,
@@ -203,12 +273,27 @@ class ExamsController < ApplicationController
                 score: score,
                 hit: hit,
                 miss: miss
-            )
+            ) if should_record
+
             # clear saved_answers.
             current_user.update question_ids: '', exam_id: 0
+            passed = score >= exam.requirement
+
+            unless passed
+                exam_limit = ExamLimit.find_by username: current_user.username,
+                                               exam_id: exam.id
+                exam_limit.fail_count += 1
+
+                if exam_limit.fail_count >= 3
+                    exam_limit.fail_count = 0
+                    exam_limit.locked_before = Time.now + (14 * 24 * 60 * 60)
+                end
+
+                exam_limit.save
+            end
 
             finish_with hit: hit, miss: miss, score: score, ans: real_ans,
-                        passed: score >= exam.requirement, time_elapsed: time_elapsed
+                        passed: passed, time_elapsed: time_elapsed
 
         else
             render html: 'else'

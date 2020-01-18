@@ -117,7 +117,6 @@
                         { key: '姓名', value: res.data.response.name },
                         { key: '学院', value: res.data.response.institute },
                         { key: '专业', value: res.data.response.major },
-                        { key: '今日登录次数', value: res.data.response.limit }
                     ]
                 }).finally(() => {
                     this.userdataLoading = false;

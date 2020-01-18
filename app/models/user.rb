@@ -5,6 +5,14 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
 
   def passed?(exam_id)
-    passed_exams.include? "#{exam_id}:"
+    records = Record.where exam_id: exam_id, username: username
+    exam = Exam.find_by id: exam_id
+
+    return false unless records and exam
+
+    records.each do |record|
+      return true if record.score >= exam.requirement
+    end
+    false
   end
 end

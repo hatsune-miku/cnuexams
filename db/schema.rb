@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200109202324) do
+ActiveRecord::Schema.define(version: 20200118034150) do
 
   create_table "auths", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "authorizer"
@@ -39,11 +39,25 @@ ActiveRecord::Schema.define(version: 20200109202324) do
     t.index ["name"], name: "index_customcates_on_name", unique: true
   end
 
+  create_table "exam_limits", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "username"
+    t.integer "exam_id"
+    t.integer "current"
+    t.integer "locked_before"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "last_login"
+    t.integer "fail_count", default: 0
+  end
+
   create_table "exams", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.text "name", limit: 16777215
     t.float "requirement", limit: 53
     t.integer "retestable"
     t.integer "time_limit"
+    t.integer "limit", default: 0
+    t.boolean "public", default: false
+    t.integer "policy", default: 0
   end
 
   create_table "hotels", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -92,7 +106,8 @@ ActiveRecord::Schema.define(version: 20200109202324) do
     t.integer "essential"
     t.integer "kind"
     t.integer "cate"
-    t.integer "exam"
+    t.string "exam"
+    t.string "label"
   end
 
   create_table "records", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -121,14 +136,10 @@ ActiveRecord::Schema.define(version: 20200109202324) do
     t.integer "status"
     t.text "session_id", limit: 16777215
     t.text "question_ids", limit: 16777215
-    t.float "last_score", limit: 53
-    t.text "passed_exams", limit: 16777215
     t.integer "exam_id"
     t.integer "time_started"
     t.integer "time_submitted"
-    t.integer "last_login"
     t.string "saved_answers"
-    t.integer "login_count", default: 0, null: false
   end
 
 end

@@ -49,11 +49,11 @@ class UsersController < ApplicationController
             session_id = params[:sessionId]
             user = User.find_by session_id: session_id
 
-            session[:user_id] = user.id
-
-            if session_id.empty? or current_user == nil
+            if user == nil or session_id.empty? or current_user == nil
                 return
             end
+
+            session[:user_id] = user.id
             finish_with session_id
 
         when 'logout'
@@ -62,10 +62,6 @@ class UsersController < ApplicationController
         when 'info'
             username = params[:username]
             current_user = User.find_by username: username
-
-            pref = Preference.find_by(name: 'login_limit').value.to_i
-            pref = '∞' if pref < 0
-            limit_desc = "#{current_user.login_count} / #{pref}"
 
             exam_id = current_user.exam_id
             exam = Exam.find_by id: exam_id
@@ -82,7 +78,6 @@ class UsersController < ApplicationController
             finish_with name: current_user.name,
                         institute: current_user.institute,
                         major: current_user.major,
-                        limit: limit_desc,
                         exam_id: exam_id,
                         exam_name: exam_name,
                         time_started: current_user.time_started,

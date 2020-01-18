@@ -9,8 +9,17 @@
                 <el-aside id="button-area" class="button-area"
                           style="width: fit-content; height: fit-content;">
 
-                    <el-scrollbar style="height: fit-content; max-height: 295px;" :noresize="true">
-                        <template v-for="(_, index) in questions">
+                    <el-scrollbar noresize>
+                        <template v-for="(question, index) in questions">
+
+                            <span v-if="question.label !== ''">
+                                <span v-if="index !== 0"><br/></span>
+                                <span style="font-size: 14px; font-weight: bold; line-height: 40px; color: gray; position: relative; top: 3px;">
+                                    {{question.label}}
+                                </span>
+                                <span v-if="question.label !== ''"><br/></span>
+                            </span>
+
                             <div class="question-button advanced-el-button"
                                  :style="cellStyleAdapter(index)"
                                  @click="switchQuestion(index)">
@@ -51,7 +60,7 @@
 
             </el-container>
 
-            <alert-box :visibility="visibility" message="确认要交卷了吗？" :on-yes="performSubmit" :on-no="actionCancel"/>
+            <alert-box :visibility="visibility" :message="messagePrefix + '确认要交卷了吗？'" :on-yes="performSubmit" :on-no="actionCancel"/>
             <scoreboard :data="scoreboardData" :visibility="shouldShowScoreboard"
                         :on-ok="actionScoreboardOk" :on-view-answer="onViewAnswer"/>
         </div>
@@ -105,7 +114,8 @@
                 ongoingExam: true,
                 timer: '',
                 realAnswers: [],
-                viewMode: false
+                viewMode: false,
+                messagePrefix: ''
             };
         },
         created() {
@@ -254,6 +264,18 @@
                 this.$router.push('/overview/exams');
             },
             actionSubmit() {
+                let flagAllAnswered = true;
+                for (let ans of this.answers) {
+                    if (ans instanceof Array && ans.length === 0) {
+                        flagAllAnswered = false;
+                        break;
+                    }
+                    else if (ans === undefined) {
+                        flagAllAnswered = false;
+                        break;
+                    }
+                }
+                this.messagePrefix = flagAllAnswered ? '' : '你还有题未答。';
                 if (this.viewMode)
                     this.$router.push('/overview/userinfo');
                 else
@@ -272,6 +294,8 @@
 
                 // saved status.
                 this.answers = items;
+
+                console.log(this.questions);
 
                 if (this.questions.length !== 0)
                     this.performSaveStatus();

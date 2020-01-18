@@ -1,7 +1,7 @@
 <template>
     <el-container style="width: 90%;">
 
-        <el-radio-group v-if="questions[questionIndex].kind !== 1"
+        <el-radio-group v-if="questions[questionIndex].kind === 0 || questions[questionIndex].kind === 2"
                         v-model="savedAnswers[questionIndex]" style="width: 100%;">
             <!-- having margin-left = 0 set can fix this stupid bug. -->
             <el-radio v-for="(option, index) in questions[questionIndex].options.split('##')" :label="option"
@@ -98,9 +98,9 @@
 
                 this.onUpdateNoQuestionFlag(true);
 
-                let questions = res.data.response.questions;
-                this.questions = [];
+                this.questions = res.data.response.questions;
 
+                /*
                 for (let question of questions) {
                     this.questions.push({
                         id: question.id,
@@ -112,6 +112,7 @@
                         cate: question.cate
                     });
                 }
+                */
 
                 let answers = res.data.response.saved_answers;
 

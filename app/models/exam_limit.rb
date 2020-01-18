@@ -1,0 +1,2 @@
+class ExamLimit < ApplicationRecord
+end
