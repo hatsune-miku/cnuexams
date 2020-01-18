@@ -25,7 +25,7 @@
                                  @click="switchQuestion(index)">
                                 {{index + 1}}
                             </div>
-                            <br v-if="(1 + index) % 4 === 0"/>
+                            <br v-if="warpTable[index]"/>
                         </template>
                     </el-scrollbar>
 
@@ -115,7 +115,8 @@
                 timer: '',
                 realAnswers: [],
                 viewMode: false,
-                messagePrefix: ''
+                messagePrefix: '',
+                warpTable: []
             };
         },
         created() {
@@ -318,6 +319,20 @@
                 this.loading = false;
                 this.questions = questions;
 
+                // calculate warp table.
+                let counter = 1;
+                for (let q of questions) {
+                    if (counter % 4 === 0)
+                        this.warpTable.push(true);
+                    else
+                        this.warpTable.push(false);
+
+                    if (q.label !== '')
+                        counter = 1;
+
+                    counter++;
+                }
+
                 this.switchQuestion(0);
 
                 if (this.globals.shouldSubmitNow === true) {
@@ -371,7 +386,7 @@
                     return '';
 
 
-                let kind = question.kind === 0 ? '单选' : '多选';
+                let kind = question.kind === 0 || question.kind === 2 ? '单选' : '多选';
                 let cate = ['理科题', '文科题', '通用-其它题', '通用-文件题', '通用-视频题'][question.cate];
                 return `第 ${this.currentIndex + 1} 题，${question.score} 分，${cate}，${kind}`;
             }

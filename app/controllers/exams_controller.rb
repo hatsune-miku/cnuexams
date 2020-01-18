@@ -134,6 +134,8 @@ class ExamsController < ApplicationController
 
             questions = mathq + artq + otherq + fileq + videoq
 
+            questions.sort! { | q1, q2 | q1[:label] <=> q2[:label] }
+
             # save session, start timing and remove saved answers.
             current_user.update time_started: Time.now,
                                  time_submitted: 0,
