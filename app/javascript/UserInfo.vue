@@ -1,7 +1,9 @@
 <template>
     <div>
         <div style="text-align: left;">
-            <h1>个人信息</h1>
+
+            <h2>个人信息</h2>
+
             <el-table :data="userdata" style="border-radius: 5px; width: 80%;" :show-header="false"
                       :header-cell-style="tableTransparentApplier" :row-style="tableTransparentApplier"
                       v-loading="userdataLoading"
@@ -13,7 +15,8 @@
             </el-table>
 
             <br/>
-            <h1>我的考试历史</h1>
+            <h2>我的考试历史</h2>
+
             <el-table class="clickable-table" :data="displayData" style="border-radius: 5px; width: 80%;"
                       :header-cell-style="tableTransparentApplier" :row-style="tableTransparentApplier"
                       :empty-text="emptyText" @row-click="actionViewExamDetail"
@@ -37,7 +40,8 @@
                            :page-size="3" :total="historydata.length"/>
 
             <br/>
-            <h1>快捷操作</h1>
+            <h2>快捷操作</h2>
+
             <el-button @click="actionGoExams">参加一个考试</el-button>
             <el-button type="primary" @click="actionGoExam">回到正在进行的考试</el-button>
         </div>

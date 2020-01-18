@@ -3,7 +3,7 @@
         <div style="left: 50%; text-align: left;">
             <table style="width: 90%;">
                 <tr>
-                    <td align="left"><h1>{{authCode ? '考试列表 (使用授权码)' : '考试列表'}}</h1></td>
+                    <td align="left"><h2>{{authCode ? '考试列表 (使用授权码)' : '考试列表'}}</h2></td>
                     <td align="right"><el-button type="text" size="medium" @click="actionUseAuthCode">
                         {{authCode ? '清空授权码' : '使用授权码'}}
                     </el-button></td>

@@ -356,16 +356,21 @@
                 );
             },
             correctJudger(index) {
-                if (this.realAnswers[this.currentIndex].includes(index))
-                    return 'green';
+                if (this.realAnswers[this.currentIndex].includes(index)) {
+                    // correct: 柳染
+                    return '#91ad70';
+                }
                 else if (this.answers[this.currentIndex]
-                    && this.answers[this.currentIndex].includes(this.questions[this.currentIndex].options.split('##')[index]))
-                    return 'red';
+                    && this.answers[this.currentIndex].includes(this.questions[this.currentIndex].options.split('##')[index])) {
+                    // wrong: 珊瑚朱
+                    return '#f17c67';
+                }
+
                 return 'transparent';
             },
             cellStyleAdapter(index) {
                 if (this.viewMode) {
-                    return this.answerMatches(index) ? 'background: white;' : 'background: red;';
+                    return this.answerMatches(index) ? 'background: white;' : 'background: #f17c67;';
                 }
 
                 // is current question?
