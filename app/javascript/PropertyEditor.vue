@@ -1,15 +1,17 @@
 <template style="width: 100%;">
     <div>
         <div class="popup-div-wrapper" @click="actionCancel" v-if="visibility" style="z-index: 4;">
-            <form :class="'popup-div ' + (mobile ? 'popup-div-mobile' : 'popup-div-pc')" @click.stop="dummyMethod">
+            <el-form :class="'popup-div ' + (mobile ? 'popup-div-mobile' : 'popup-div-pc')"
+                     @click.native.stop="dummyMethod" @submit.native.prevent>
                 <h3>{{title}}</h3>
 
                 <slot/>
 
                 <el-scrollbar :class="mobile ? 'mobile-scroll-bar' : ''">
-                    <el-container v-if="!property.uninputable && property.givenValue === undefined"
+
+                    <el-container v-for="(property, index) in properties"
                                   direction="horizontal"
-                                  v-for="(property, index) in properties"
+                                  v-if="!property.uninputable && property.givenValue === undefined"
                                   :key="property.key">
 
                         <el-input v-if="property.type === undefined"
@@ -18,16 +20,14 @@
                                   v-model="inputs[index]"
                                   :show-password="property.password"
                                   style="margin-top: 10px;"
-                                  :id="'input' + index"/>
+                                  :id="'input' + index">
 
-
-                        <span slot="append" v-if="property.suffix !== undefined">
-                            {{property.suffix}}
-                        </span>
-
-                        <span slot="prepend" v-if="property.prefix !== undefined">
-                            {{property.prefix}}
-                        </span>
+                            <span slot="append" v-if="property.suffix !== undefined">
+                                {{property.suffix}}
+                            </span>
+                            <span slot="prepend" v-if="property.prefix !== undefined">
+                                {{property.prefix}}
+                            </span>
 
                         </el-input>
 
@@ -57,8 +57,8 @@
                                    :placeholder="property.label">
                             <el-option v-for="option in property.params"
                                        :label="option.name"
-                                       :value="option.name"
-                                       :key="option.name"/>
+                                       :value="option.value"
+                                       :key="option.value"/>
                         </el-select>
 
                         <el-select v-if="property.type === 'single-select'"
@@ -68,7 +68,7 @@
                             <el-option v-for="option in property.params"
                                        :label="option.name"
                                        :value="option.value"
-                                       :key="option.name"/>
+                                       :key="option.value"/>
                         </el-select>
 
                     </el-container>
@@ -95,7 +95,7 @@
                     </tr>
                 </table>
 
-            </form>
+            </el-form>
         </div>
 
         <div class="alertback" style="z-index: 3;" v-if="visibility"></div>
@@ -123,7 +123,7 @@
             },
             initValue: {
                 type: Object,
-                default: () => {return {};}
+                default: () => { return {}; }
             },
             comment: {
                 type: String,
@@ -160,11 +160,27 @@
                 return;
 
             this.properties.forEach((property, index) => {
-                this.$set(this.inputs, index, this.initValue[property.key] || (property.defaultValue || ''));
+                // treat true, false as 1, 0.
+                if (property.key === true)
+                    property.key = 1;
+                else if (property.key === false)
+                    property.key = 0;
+
+                // automatic prefix.
+                if (!property.prefix && property.label && property.label.length < 8)
+                    property.prefix = property.label;
+
+                let givenValue = this.initValue[property.key];
+                if (givenValue !== undefined && givenValue !== null)
+                    this.$set(this.inputs, index, givenValue);
+                else
+                    this.$set(this.inputs, index, property.defaultValue || '');
             });
 
             setTimeout(() => {
-                document.getElementById('input1').focus();
+                let el = document.getElementById('input1') || document.getElementById('input0');
+                if (el)
+                    el.focus();
             }, 300);
         },
         destroyed() {
@@ -180,7 +196,10 @@
                 let res = {};
                 this.properties.forEach((property, index) => {
                     res[property.key] = this.inputs[index];
-                    this.inputs[index] = '';
+
+                    // why i wrote this? it only causes a bug.
+                    // this.inputs[index] = '';
+
                 });
                 this.onConfirmed(res);
             },

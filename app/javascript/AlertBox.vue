@@ -14,29 +14,6 @@
 </template>
 
 <style scoped>
-    .alertbox {
-        animation: bouncein ease 0.3s;
-        padding: 20px 60px;
-        box-shadow: black 0 0 1px;
-        text-align: center;
-
-        border-radius: 10px;
-
-        background: white;
-    }
-
-    .alertback {
-        animation: fadein linear 0.3s;
-
-        position: fixed;
-
-        opacity: 0.7;
-        width: 100%;
-        height: 100%;
-        left: 0;
-        top: 0;
-        background: #1C1C1C;
-    }
 
 </style>
 

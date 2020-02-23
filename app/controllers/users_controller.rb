@@ -6,6 +6,8 @@ class UsersController < ApplicationController
 
 
     def create
+        return if crud User, '考生', '位'
+
         intent = params[:intent]
         case intent
         when 'login'
@@ -13,7 +15,6 @@ class UsersController < ApplicationController
             password = params[:password]
 
             user = User.find_by username: username
-
             if (user == nil) or (user.password != password)
                 error '学号或密码错误'
                 return
@@ -23,7 +24,7 @@ class UsersController < ApplicationController
             user.session_id = session_id
             user.save
 
-            session[:user_id] = user.id
+            session[:user_id] = user.username
 
             finish_with session_id: session_id, name: user.name
 
@@ -34,7 +35,7 @@ class UsersController < ApplicationController
 
             user = User.find_by username: username
 
-            if (user == nil) or (user.password != password)
+            if user.nil? or user.password != password
                 error '学号或密码错误'
                 return
             end
@@ -49,11 +50,9 @@ class UsersController < ApplicationController
             session_id = params[:sessionId]
             user = User.find_by session_id: session_id
 
-            if user == nil or session_id.empty? or current_user == nil
-                return
-            end
+            return if user.nil? or session_id.empty?
 
-            session[:user_id] = user.id
+            session[:user_id] = user.username
             finish_with session_id
 
         when 'logout'
@@ -85,12 +84,18 @@ class UsersController < ApplicationController
 
         when 'history'
             username = params[:username]
-            records = Record.where :username => username
+
+            records = Record.where username: username
 
             ret = []
+
+            # this is a cache preventing redundant query.
+            exams = []
             records.each do |record|
                 exam_id = record.exam_id
-                exam = Exam.find_by id: exam_id
+
+                exam = exams[exam_id] || Exam.find_by(id: exam_id)
+                exams[exam_id] ||= exam
 
                 requirement = exam.requirement
                 score = record.score
@@ -109,6 +114,12 @@ class UsersController < ApplicationController
 
             # newer records should be on top.
             finish_with ret.reverse
+
+        when 'count'
+            finish_with count: User.count
+
+        when 'spacelens'
+            finish_with User.spacelens(params[:offset], params[:limit])
 
         else
             render html: 'else.'

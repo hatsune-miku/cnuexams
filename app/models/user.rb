@@ -15,4 +15,46 @@ class User < ApplicationRecord
     end
     false
   end
+
+  def self.spacelens(offset, limit)
+    ret = []
+    users = User.limit(limit).offset(offset).all
+    users.each do |user|
+
+      status = if user.time_started == 0
+                 '尚未考试'
+               elsif user.time_submitted == 0
+                 '正在考试'
+               else
+                 'error'
+               end
+
+      record = Record.where(username: user.username).last
+      if record
+        time_elapsed = record.time_elapsed
+        score = record.score
+        passed = score >= Exam.find_by(id: record.exam_id).requirement ? 'Yes' : 'No'
+      else
+        time_elapsed = '-'
+        score = '-'
+        passed = '-'
+      end
+
+      ret << {
+          username: user.username,
+          name: user.name,
+          institute: user.institute,
+          major: user.major,
+          exam_id: user.exam_id,
+          status: status,
+          time_started: user.time_started,
+          time_submitted: user.time_submitted,
+          time_elapsed: time_elapsed,
+          score: score,
+          passed: passed
+      }
+    end
+    ret
+
+  end
 end

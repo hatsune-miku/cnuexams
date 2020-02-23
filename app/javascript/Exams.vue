@@ -83,7 +83,7 @@
         mounted() {
             this.username = this.$cookies.get('username');
             axios.post('/exams/', {
-                intent: 'list',
+                intent: 'list-available',
                 username: this.username
             }).then(res => {
                 if (res.data.errorcode !== 0) {

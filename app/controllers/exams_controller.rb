@@ -77,7 +77,7 @@ class ExamsController < ApplicationController
         intent = params[:intent]
         case intent
 
-        when 'list'
+        when 'list-available'
             finish_with Exam.where public: true
 
         when 'start'
@@ -269,7 +269,7 @@ class ExamsController < ApplicationController
                 username: current_user.username,
                 question_ids: current_user.question_ids,
                 ans: answers.join('##'),
-                real_ans: real_ans,
+                real_ans: real_ans.join('##'),
                 time_elapsed: time_elapsed,
                 exam_id: exam.id,
                 score: score,
@@ -278,7 +278,7 @@ class ExamsController < ApplicationController
             ) if should_record
 
             # clear saved_answers.
-            current_user.update question_ids: '', exam_id: 0
+            current_user.update question_ids: '', exam_id: 0, time_started: 0, time_submitted: Time.now
             passed = score >= exam.requirement
 
             unless passed
@@ -288,7 +288,7 @@ class ExamsController < ApplicationController
 
                 if exam_limit.fail_count >= 3
                     exam_limit.fail_count = 0
-                    exam_limit.locked_before = Time.now + (14 * 24 * 60 * 60)
+                    exam_limit.locked_before = 14.days.from_now
                 end
 
                 exam_limit.save
@@ -297,10 +297,14 @@ class ExamsController < ApplicationController
             finish_with hit: hit, miss: miss, score: score, ans: real_ans,
                         passed: passed, time_elapsed: time_elapsed
 
+        when 'analysis'
+            finish_with Exam.find_by(id: params[:exam_id]).question_analysis(params[:start_time], params[:finish_time])
+
         else
-            render html: 'else'
+            crud Exam, '考试', '项'
 
         end
+
     end
 
     def verified_session_id?(given_session_id)

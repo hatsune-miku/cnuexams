@@ -52,9 +52,6 @@
 </template>
 
 <style scoped>
-    /deep/ .clickable-table .el-table__row:hover {
-        cursor: pointer;
-    }
     /deep/ .btn-prev {
         background: transparent;
     }

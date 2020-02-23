@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200118034150) do
+ActiveRecord::Schema.define(version: 20200222093639) do
 
   create_table "auths", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "authorizer"
@@ -55,7 +55,7 @@ ActiveRecord::Schema.define(version: 20200118034150) do
     t.float "requirement", limit: 53
     t.integer "retestable"
     t.integer "time_limit"
-    t.integer "limit", default: 0
+    t.integer "attend_limit", default: 0
     t.boolean "public", default: false
     t.integer "policy", default: 0
   end
@@ -71,20 +71,25 @@ ActiveRecord::Schema.define(version: 20200118034150) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "institutes", primary_key: "name", id: :string, limit: 64, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+  create_table "institutes", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "name", null: false
     t.float "mathp", limit: 53
     t.float "artp", limit: 53
     t.float "generalp", limit: 53
     t.integer "kind"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "members", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.string "name"
     t.string "role"
     t.integer "belong"
     t.string "tel"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "username"
+    t.string "session_id"
+    t.string "password"
   end
 
   create_table "meta", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -137,8 +142,8 @@ ActiveRecord::Schema.define(version: 20200118034150) do
     t.text "session_id", limit: 16777215
     t.text "question_ids", limit: 16777215
     t.integer "exam_id"
-    t.integer "time_started"
-    t.integer "time_submitted"
+    t.integer "time_started", default: 0
+    t.integer "time_submitted", default: 0
     t.string "saved_answers"
   end
 

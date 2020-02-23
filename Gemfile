@@ -1,4 +1,5 @@
-source 'https://rubygems.org'
+# source 'https://rubygems.org'
+source 'https://gems.ruby-china.com'
 
 git_source(:github) do |repo_name|
   repo_name = "#{repo_name}/#{repo_name}" unless repo_name.include?("/")
@@ -9,9 +10,11 @@ end
 # gem 'devise'
 # goodbye stupid devise.
 
+gem 'creek'
+gem 'activerecord-import', '~> 1.0', '>= 1.0.4'
+
 gem 'uuid'
 # gem 'coolerme'
-gem 'web-console', '>= 3.3.0', group: :development
 
 gem 'listen', '>= 3.0.5', '< 3.2'
 

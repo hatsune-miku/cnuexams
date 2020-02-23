@@ -4,4 +4,15 @@ Rails.application.routes.draw do
     resources :overview
     resources :statics
     resources :exams
+    resources :questions
+    resources :members
+    resources :upload
+    resources :preferences
+    resources :institutes
+    resources :auths
+
+    resources :member
+    namespace :member do
+        resources :overview
+    end
 end

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="top-right  eggtart-div" style="color: black; height: 130px; width: 300px; background: #FEFEFE;">
+    <div class="top-right eggtart-div" style="color: black; height: 130px; width: 300px; background: #FEFEFE;">
       <div style="margin-left: 20px;">
         <div style="font-size: 15px;">
           <p><b>首都师范大学考试系统</b></p>
