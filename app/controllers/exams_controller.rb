@@ -37,7 +37,7 @@ class ExamsController < ApplicationController
 
             remaining = auth.remaining
             if remaining == 1
-                auth.destroy
+                ActiveRecord::Base.connection.execute "DELETE FROM auths WHERE auth_code = '#{auth.auth_code}'"
             elsif remaining > 1
                 auth.remaining = remaining - 1
                 auth.save
