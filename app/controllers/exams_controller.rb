@@ -5,7 +5,7 @@ class ExamsController < ApplicationController
     end
 
     def verified_exam_limit?(exam)
-        limit = exam.limit || 0
+        limit = exam.attend_limit || 0
 
         # ensure exam_limit.
         exam_limit = ExamLimit.find_by username: current_user.username,
