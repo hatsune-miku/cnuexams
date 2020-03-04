@@ -11,7 +11,7 @@ console.log('loading member application...');
 
 import Vue from 'vue'
 
-Vue.config.productionTip = false;
+// Vue.config.productionTip = false;
 
 import VueRouter from 'vue-router'
 import VueCookies from 'vue-cookies'

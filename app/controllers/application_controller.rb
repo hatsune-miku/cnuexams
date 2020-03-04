@@ -50,6 +50,7 @@ class ApplicationController < ActionController::Base
 
             # D
         when 'destroy', 'delete', 'remove', 'erase'
+            p params_for(:destroy), 'AAAAAA'
             entity.destroy(params_for :destroy)
             errorcode 0, "删除了一#{measure}#{entity_name}"
 
@@ -68,9 +69,14 @@ class ApplicationController < ActionController::Base
 
         when :destroy
             if params[:data].is_a? Array
-                params[:data].pluck :id
+                ret = params[:data].pluck(:id)
+                if ret.any? { |item| not item.nil? }
+                    ret
+                else
+                    params[:data].pluck(:username)
+                end
             else
-                params[:data][:id]
+                params[:data][:id] || params[:data][:username]
             end
 
         else
