@@ -19,6 +19,9 @@ import VueCookies from 'vue-cookies'
 // prevent violation.
 import 'default-passive-events'
 
+// IE.
+import 'babel-polyfill'
+
 // elemenb
 import ElementUI from 'element-ui'
 import '../../assets/stylesheets/element-alter.scss'

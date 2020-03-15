@@ -10,6 +10,8 @@ end
 # gem 'devise'
 # goodbye stupid devise.
 
+gem 'rack-cors', :require => 'rack/cors'
+
 gem 'creek'
 gem 'activerecord-import', '~> 1.0', '>= 1.0.4'
 

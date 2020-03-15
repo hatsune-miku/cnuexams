@@ -6,7 +6,7 @@ class AuthsController < ApplicationController
     def index
         case params[:intent]
         when 'list'
-            finish_with Auth.where('authorizer = ? and authorizee != "*"', current_member.username)
+            finish_with Auth.where('authorizer = ? and authorizee != "*"', params[:username])
 
         when 'create'
             unless User.find_by username: params[:authorizee]
@@ -15,7 +15,7 @@ class AuthsController < ApplicationController
             end
 
             Auth.create(
-                authorizer: current_member.username,
+                authorizer: params[:authorizer],
                 authorizee: params[:authorizee],
                 auth_code: UUID.new.generate,
                 remaining: 1

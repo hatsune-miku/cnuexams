@@ -52,9 +52,11 @@ class MembersController < ApplicationController
             member = Member.find_by session_id: session_id
 
             if member == nil or session_id.empty?
+                puts 'reuse failed.'
                 return
             end
 
+            puts "#{member.username} reused."
             session[:member_id] = member.username
             finish_with session_id
 

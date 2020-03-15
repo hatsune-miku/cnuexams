@@ -8,11 +8,11 @@ class ExamsController < ApplicationController
         limit = exam.attend_limit || 0
 
         # ensure exam_limit.
-        exam_limit = ExamLimit.find_by username: current_user.username,
+        exam_limit = ExamLimit.find_by username: params[:username],
                                        exam_id: exam.id
 
         unless exam_limit
-            exam_limit = ExamLimit.create(username: current_user.username,
+            exam_limit = ExamLimit.create(username: params[:username],
                                           exam_id: exam.id,
                                           current: 0,
                                           locked_before: 0,
@@ -30,7 +30,7 @@ class ExamsController < ApplicationController
                 return false
             end
 
-            unless auth.authorizee == current_user.username or auth.authorizee == '*'
+            unless auth.authorizee == params[:username] or auth.authorizee == '*'
                 error '人码不匹配'
                 return false
             end
@@ -48,7 +48,7 @@ class ExamsController < ApplicationController
             # check if locked?
             locked_before = Time.at exam_limit.locked_before
             if Time.now < locked_before
-                error "连续不及格次数超过 3 次啦！<br/>下次考试将在 #{locked_before} 时准时开放。"
+                error "连续不及格次数超过 #{exam.attend_limit} 次啦！<br/>下次考试将在 #{locked_before} 时准时开放。"
                 return false
             end
 
@@ -85,20 +85,19 @@ class ExamsController < ApplicationController
             session_id = params[:session_id]
             exam_id = params[:exam_id]
             given_major = params[:given_major]
-
             exam = Exam.find_by id: exam_id
 
             return unless verified_session_id?(session_id) and verified_exam_limit?(exam)
 
             # check if irretestable.
-            if exam.irretestable? and current_user.passed? exam_id
+            if exam.irretestable? and @current_user.passed? exam_id
                 error '不可重复参加'
                 return
             end
 
             case given_major
             when nil
-                institute = Institute.find_by name: current_user.institute
+                institute = Institute.find_by name: @current_user.institute
                 artp = institute.artp
                 mathp = institute.mathp
                 generalp = institute.generalp
@@ -130,14 +129,14 @@ class ExamsController < ApplicationController
             fileq  = Question.sample(exam_id, 3, filep)
             videoq  = Question.sample(exam_id, 4, videop)
 
-            current_user.update exam_id: exam_id
+            @current_user.update exam_id: exam_id
 
             questions = mathq + artq + otherq + fileq + videoq
 
             questions.sort! { | q1, q2 | q1[:label] <=> q2[:label] }
 
             # save session, start timing and remove saved answers.
-            current_user.update time_started: Time.now,
+            @current_user.update time_started: Time.now,
                                  time_submitted: 0,
                                  question_ids: questions.pluck(:id).join(','),
                                  saved_answers: ''
@@ -152,7 +151,7 @@ class ExamsController < ApplicationController
 
             p answers
 
-            current_user.update saved_answers: answers
+            @current_user.update saved_answers: answers
             errorcode 0
 
         when 'restart'
@@ -160,7 +159,7 @@ class ExamsController < ApplicationController
 
             return unless verified_session_id?(session_id)
 
-            question_ids = current_user.question_ids.split(',')
+            question_ids = @current_user.question_ids.split(',')
 
             if question_ids.length == 0
                 # not attended or no questions.
@@ -170,7 +169,7 @@ class ExamsController < ApplicationController
 
             ret = {
                 questions: [],
-                saved_answers: current_user.saved_answers
+                saved_answers: @current_user.saved_answers
             }
 
             last_label = ''
@@ -207,28 +206,30 @@ class ExamsController < ApplicationController
             score = 0
             i = 0
 
-            exam = Exam.find_by id: current_user.exam_id
+            exam = Exam.find_by id: @current_user.exam_id
 
             # check if not submitting on time.
-            time_elapsed = Time.now.to_i - current_user.time_started
+            time_elapsed = Time.now.to_i - @current_user.time_started
             if time_elapsed - exam.time_limit > 60
                 # clear saved_answers.
-                current_user.update question_ids: '', exam_id: 0
+                @current_user.update question_ids: '', exam_id: 0
 
                 error "你错过了考试(#{exam.name})的提交时间"
                 return
             end
 
-            qids = current_user.question_ids.split ','
+            qids = @current_user.question_ids.split ','
             real_ans = []
 
             qids.each do |qid|
                 question = Question.find_by id: qid
-                given_ans = answers[i]
+                given_ans = answers[i] || ''
                 i += 1
 
                 ans = question.answer
                 real_ans << ans
+
+                puts ans.class, given_ans.class
 
                 if ans.chars.sort == given_ans.chars.sort
                     hit += 1
@@ -248,14 +249,14 @@ class ExamsController < ApplicationController
                             # higher.
                             when 1
                                 Record.exists? 'username = ?, exam_id = ?, score > ?',
-                                               current_user.username,
+                                               @current_user.username,
                                                exam.id,
                                                score
 
                             # lower.
                             when 2
                                 Record.exists? 'username = ?, exam_id = ?, score < ?',
-                                               current_user.username,
+                                               @current_user.username,
                                                exam.id,
                                                score
 
@@ -266,8 +267,8 @@ class ExamsController < ApplicationController
 
             # make record.
             Record.create(
-                username: current_user.username,
-                question_ids: current_user.question_ids,
+                username: @current_user.username,
+                question_ids: @current_user.question_ids,
                 ans: answers.join('##'),
                 real_ans: real_ans.join('##'),
                 time_elapsed: time_elapsed,
@@ -278,11 +279,11 @@ class ExamsController < ApplicationController
             ) if should_record
 
             # clear saved_answers.
-            current_user.update question_ids: '', exam_id: 0, time_started: 0, time_submitted: Time.now
+            @current_user.update question_ids: '', exam_id: 0, time_started: 0, time_submitted: Time.now
             passed = score >= exam.requirement
 
             unless passed
-                exam_limit = ExamLimit.find_by username: current_user.username,
+                exam_limit = ExamLimit.find_by username: @current_user.username,
                                                exam_id: exam.id
                 exam_limit.fail_count += 1
 
@@ -308,8 +309,10 @@ class ExamsController < ApplicationController
     end
 
     def verified_session_id?(given_session_id)
+        @current_user = User.find_by username: params[:username]
+
         # check if session_id is incorrect.
-        unless given_session_id == current_user.session_id
+        unless given_session_id == params[:session_id]
             error 'session_id 不正确'
             return false
         end

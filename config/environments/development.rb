@@ -51,6 +51,9 @@ config.webpacker.check_yarn_integrity = true
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  config.action_controller.allow_forgery_protection = false
+  config.action_mailer.perform_caching = false
+
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
