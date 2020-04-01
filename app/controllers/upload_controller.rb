@@ -45,7 +45,10 @@ class UploadController < ApplicationController
     def index
         file = params[:file]
         db = params[:db]
-        return unless file
+        unless file
+            error 'no files provided.'
+            return
+        end
 
         book = Creek::Book.new(file.tempfile)
         sheet = book.sheets[0]
@@ -55,6 +58,11 @@ class UploadController < ApplicationController
         sheet.rows.drop(1).each do |row|
             dat = {}
             row.values.each_with_index do |v, i|
+                unless v
+                    dat = {}
+                    break
+                end
+                
                 dat[NAME_TABLE[db.to_sym][header[i].to_sym]] = v
             end
             break if dat == {}
