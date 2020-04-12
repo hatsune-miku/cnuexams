@@ -1,6 +1,6 @@
 class Question < ApplicationRecord
 
-    MAX_QUESTIONS_COUNT = 50
+    MAX_QUESTIONS_COUNT = 50.freeze
 
     def self.sample(exam_id, cate, perportion)
         where('exam like ? and cate = ?', "%#{exam_id}%", cate)
