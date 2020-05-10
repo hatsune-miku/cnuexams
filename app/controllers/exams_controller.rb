@@ -80,6 +80,9 @@ class ExamsController < ApplicationController
         when 'list-available'
             finish_with Exam.where public: true
 
+        when 'list-all'
+            finish_with Exam.all
+ 
         when 'start'
             # exam start!
             session_id = params[:session_id]
