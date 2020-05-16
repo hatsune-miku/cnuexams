@@ -4,7 +4,7 @@ class ExamQuestionKindsController < ApplicationController
         exam_id = params[:exam_id]
         labels = Question.where("exam like '%#{exam_id}%'").distinct(:label).pluck(:label)
         labels.each do |label|
-            eqks = ExamQuestionKind.where label: label
+            eqks = ExamQuestionKind.where exam_id: exam_id, label: label
             if eqks.count == 0
                 ExamQuestionKind.create(exam_id: exam_id, label: label, proportion: 0)
             end
