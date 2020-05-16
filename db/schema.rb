@@ -10,25 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200222093639) do
+ActiveRecord::Schema.define(version: 20200516041412) do
 
   create_table "auths", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "authorizer"
     t.string "authorizee"
     t.string "auth_code"
     t.integer "remaining"
-  end
-
-  create_table "corps", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.string "name"
-    t.integer "since"
-    t.string "website"
-    t.string "legal_entity"
-    t.string "tel"
-    t.string "fax"
-    t.string "email"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.index ["authorizer"], name: "authorizer_fk"
   end
 
   create_table "customcates", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -48,6 +37,16 @@ ActiveRecord::Schema.define(version: 20200222093639) do
     t.datetime "updated_at", null: false
     t.integer "last_login"
     t.integer "fail_count", default: 0
+    t.index ["exam_id"], name: "exam_id_fk_el"
+    t.index ["username"], name: "username_fk_el"
+  end
+
+  create_table "exam_question_kinds", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci" do |t|
+    t.bigint "exam_id"
+    t.string "label"
+    t.float "proportion", limit: 24
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "exams", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -60,17 +59,6 @@ ActiveRecord::Schema.define(version: 20200222093639) do
     t.integer "policy", default: 0
   end
 
-  create_table "hotels", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.string "name"
-    t.integer "belong"
-    t.string "latlng"
-    t.string "tel"
-    t.integer "cate"
-    t.string "attrs"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "institutes", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name", null: false
     t.float "mathp", limit: 53
@@ -79,6 +67,7 @@ ActiveRecord::Schema.define(version: 20200222093639) do
     t.integer "kind"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.index ["name"], name: "name"
   end
 
   create_table "members", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -87,9 +76,10 @@ ActiveRecord::Schema.define(version: 20200222093639) do
     t.string "tel"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "username"
+    t.string "username", null: false
     t.string "session_id"
     t.string "password"
+    t.index ["username"], name: "username"
   end
 
   create_table "meta", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -127,16 +117,14 @@ ActiveRecord::Schema.define(version: 20200222093639) do
     t.float "score", limit: 24
     t.integer "hit"
     t.integer "miss"
-  end
-
-  create_table "test", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.text "name", limit: 16777215
+    t.index ["exam_id"], name: "exam_id_fk"
+    t.index ["username"], name: "username_fk"
   end
 
   create_table "users", primary_key: "username", id: :string, limit: 64, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.text "password", limit: 16777215
     t.text "name", limit: 16777215
-    t.text "institute", limit: 16777215
+    t.string "institute"
     t.text "major", limit: 16777215
     t.integer "status"
     t.text "session_id", limit: 16777215
@@ -145,6 +133,13 @@ ActiveRecord::Schema.define(version: 20200222093639) do
     t.integer "time_started", default: 0
     t.integer "time_submitted", default: 0
     t.string "saved_answers"
+    t.index ["institute"], name: "institute_fk"
   end
 
+  add_foreign_key "auths", "members", column: "authorizer", primary_key: "username", name: "authorizer_fk", on_update: :cascade, on_delete: :cascade
+  add_foreign_key "exam_limits", "exams", name: "exam_id_fk_el", on_update: :cascade, on_delete: :cascade
+  add_foreign_key "exam_limits", "users", column: "username", primary_key: "username", name: "username_fk_el", on_update: :cascade, on_delete: :cascade
+  add_foreign_key "records", "exams", name: "exam_id_fk", on_update: :cascade, on_delete: :cascade
+  add_foreign_key "records", "users", column: "username", primary_key: "username", name: "username_fk", on_update: :cascade, on_delete: :cascade
+  add_foreign_key "users", "institutes", column: "institute", primary_key: "name", name: "institute_fk", on_update: :cascade, on_delete: :cascade
 end

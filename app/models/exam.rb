@@ -1,4 +1,6 @@
 class Exam < ApplicationRecord
+    has_many :exam_question_kinds
+
     def irretestable?
         retestable == 0
     end
@@ -11,7 +13,7 @@ class Exam < ApplicationRecord
             ans = record.ans.split('##')
             real_ans = record.real_ans.split('##')
             question_ids = record.question_ids.split(',')
-            
+
             question_ids.each_with_index do |question_id, i|
                 question = Question.find_by id: question_id
                 questions[question_id] ||= { id: question_id, summary: question.summary, hit: 0, miss: 0 }

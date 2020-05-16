@@ -1,6 +1,10 @@
 <template>
     <div>
-        <genreal-table-viewer table-name="考试" controller-name="exams" :data="data" :search-filter="filter"/>
+        <genreal-table-viewer table-name="考试" controller-name="exams" :data="data" :search-filter="filter" show-tooltips>
+            <span slot-scope="scope">
+                xxx
+            </span>
+        </genreal-table-viewer>
     </div>
 </template>
 

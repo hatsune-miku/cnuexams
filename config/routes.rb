@@ -10,6 +10,7 @@ Rails.application.routes.draw do
     resources :preferences
     resources :institutes
     resources :auths
+    resources :exam_question_kinds
 
     resources :member
     namespace :member do

@@ -128,7 +128,7 @@ class ExamsController < ApplicationController
 
             mathq = Question.sample(exam_id, 0, mathp)
             artq = Question.sample(exam_id, 1, artp)
-            otherq  = Question.sample(exam_id, 2, otherp)
+            otherq = Question.sample(exam_id, 2, otherp)
             fileq  = Question.sample(exam_id, 3, filep)
             videoq  = Question.sample(exam_id, 4, videop)
 
@@ -152,8 +152,6 @@ class ExamsController < ApplicationController
 
             return unless verified_session_id?(session_id)
 
-            p answers
-
             @current_user.update saved_answers: answers
             errorcode 0
 
@@ -176,11 +174,11 @@ class ExamsController < ApplicationController
             }
 
             last_label = ''
-            question_ids.each do |id|
-                question = Question.find_by id: id
-
+            questions = Question.where("id in #{question_ids.to_s.tr('[]"', '() ')}")
+            questions.each do |question|
+                # question = Question.find_by id: id
                 ret[:questions] << {
-                    id: id,
+                    id: question.id,
                     summary: question.summary,
                     options: question.options,
                     score: question.score,
@@ -231,8 +229,6 @@ class ExamsController < ApplicationController
 
                 ans = question.answer
                 real_ans << ans
-
-                puts ans.class, given_ans.class
 
                 if ans.chars.sort == given_ans.chars.sort
                     hit += 1
@@ -290,7 +286,7 @@ class ExamsController < ApplicationController
                                                exam_id: exam.id
                 exam_limit.fail_count += 1
 
-                if exam_limit.fail_count >= 3
+                if exam_limit.fail_count >= exam.attend_limit
                     exam_limit.fail_count = 0
                     exam_limit.locked_before = 14.days.from_now
                 end
